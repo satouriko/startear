@@ -1,3 +1,4 @@
-import { bootstrap } from "./core/bootstrap.ts";
+import { App } from "./mod.ts";
 
-bootstrap();
+const app = new App();
+app.run();
