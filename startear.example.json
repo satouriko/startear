@@ -3,5 +3,8 @@
     "caiyunapp": {
       "api_key": ""
     }
+  },
+  "http": {
+    "port": 1997
   }
 }

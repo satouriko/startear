@@ -1,16 +1,20 @@
 import { Ajv, log } from "./dep.ts";
 import { bootstrap } from "./core/bootstrap.ts";
-import { Plugin } from "./core/plugin.ts";
+import { Plugin, PluginConstructor } from "./interfaces/plugin.ts";
 import * as GlobalConfig from "./config.ts";
 
 const logger = new log.Logger();
 
 export class App {
-  private plugins: Plugin[] = [];
+  // deno-lint-ignore no-explicit-any
+  private plugins: Plugin<any>[] = [];
 
-  use(plugin: Plugin) {
+  use<T>(plugin: Plugin<T> | PluginConstructor<T>) {
+    if (typeof plugin === "function") {
+      plugin = new plugin();
+    }
     if (
-      this.plugins.findIndex((p) => p.__proto__ === plugin.__proto__) === -1
+      this.plugins.findIndex((p) => p.constructor === plugin.constructor) === -1
     ) {
       this.plugins.push(plugin);
     }
@@ -23,7 +27,14 @@ export class App {
     logger.info("Reading config file...");
     const config = JSON.parse(Deno.readTextFileSync("./startear.json"));
     const ajv = new Ajv();
-    const validate = ajv.compile(GlobalConfig.configSchema);
+    const schema = JSON.parse(JSON.stringify(GlobalConfig.configSchema));
+    for (const plugin of this.plugins) {
+      // deno-lint-ignore no-explicit-any
+      const constructor = plugin.constructor as PluginConstructor<any>;
+      const pluginConfigSchema = constructor.configSchema;
+      schema.properties[constructor.configKey] = pluginConfigSchema;
+    }
+    const validate = ajv.compile(schema);
     const valid = validate(config);
     if (!valid) {
       logger.error(validate.errors);
@@ -35,7 +46,7 @@ export class App {
     /**
      * 启动核心组件
      */
-    logger.info("Bootstrapping Core...");
+    logger.info("Bootstrapping...");
     bootstrap();
     logger.info("Core started");
 
@@ -43,9 +54,12 @@ export class App {
      * 启动插件
      */
     for (const plugin of this.plugins) {
-      logger.info(`Bootstrapping ${plugin.__proto__.name}...`);
-      plugin.bootstrap();
-      logger.info(`${plugin.__proto__.name} started`);
+      // deno-lint-ignore no-explicit-any
+      const constructor = plugin.constructor as PluginConstructor<any>;
+      logger.info(`Loading ${constructor.name}...`);
+      const pluginConfig = config[constructor.configKey];
+      plugin.bootstrap(pluginConfig);
+      logger.info(`${constructor.name} started`);
     }
   }
 }
