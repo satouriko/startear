@@ -29,6 +29,7 @@ export class App {
       logger.error(validate.errors);
       Deno.exit();
     }
+    GlobalConfig.setConfig(config);
     logger.info("Config file validates!");
 
     /**
