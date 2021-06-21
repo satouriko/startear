@@ -1,4 +1,4 @@
-import { db } from "../db.ts";
+import { db } from "./db.ts";
 
 export function migrate() {
   db.query(

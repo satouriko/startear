@@ -1,6 +1,7 @@
 import { Ajv, log } from "./dep.ts";
 import { bootstrap } from "./core/bootstrap.ts";
 import { Plugin } from "./core/plugin.ts";
+import * as GlobalConfig from "./config.ts";
 
 const logger = new log.Logger();
 
@@ -19,7 +20,16 @@ export class App {
     /**
      * 解析配置文件，校验
      */
+    logger.info("Reading config file...");
+    const config = JSON.parse(Deno.readTextFileSync("./startear.json"));
     const ajv = new Ajv();
+    const validate = ajv.compile(GlobalConfig.configSchema);
+    const valid = validate(config);
+    if (!valid) {
+      logger.error(validate.errors);
+      Deno.exit();
+    }
+    logger.info("Config file validates!");
 
     /**
      * 启动核心组件
