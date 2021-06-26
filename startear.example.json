@@ -2,6 +2,9 @@
   "dataSource": {
     "caiyunapp": {
       "api_key": ""
+    },
+    "heweather": {
+      "api_key": ""
     }
   },
   "http": {

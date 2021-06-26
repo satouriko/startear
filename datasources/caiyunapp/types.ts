@@ -1,4 +1,4 @@
-export interface ResponseOK<T extends keyof Result> {
+export interface ResponseOKV25<T extends keyof ResultV25> {
   status: "ok";
   "api_version": string;
   "api_status": string;
@@ -7,8 +7,8 @@ export interface ResponseOK<T extends keyof Result> {
   tzshift: number;
   timezone: string;
   "server_time": number;
-  location: [number, number];
-  result: Pick<Result, T> & { primary: number };
+  location: Location;
+  result: Pick<ResultV25, T> & { primary: number };
 }
 
 export type Realtime = "realtime";
@@ -17,7 +17,7 @@ export type Hourly = "hourly" | "forecast_keypoint";
 export type Daily = "daily";
 export type Weather = Realtime | Minutely | Hourly | Daily;
 
-export interface Result {
+export interface ResultV25 {
   realtime: {
     status: "ok";
     temperature: number;
@@ -116,6 +116,11 @@ export interface ResponseFailed {
   "api_version": string;
 }
 
+export interface RequestV25Params {
+  endpoint?: string;
+  location: Location;
+}
+
 export interface Astro {
   date: string;
   sunrise: { time: string };
@@ -170,3 +175,32 @@ export interface DailyLifeIndex extends LifeIndex {
 }
 
 export type Location = [number, number];
+
+export type ResponseOKV20<T extends keyof ResultV20> = Pick<ResultV20, T> & {
+  status: "ok";
+  query: string;
+};
+
+export interface RequestV20Params {
+  endpoint?: string;
+  query: string;
+  count?: number;
+  lang?: string;
+}
+
+export interface ResultV20 {
+  places: Place[];
+}
+
+export type Places = "places";
+
+export interface Place {
+  id: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  "place_id": string;
+  name: string;
+  "formatted_address": string;
+}
